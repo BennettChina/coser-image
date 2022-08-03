@@ -23,6 +23,7 @@ const cos: OrderConfig = {
 export async function init(): Promise<PluginSetting> {
 	return {
 		pluginName: "coser-image",
-		cfgList: [ cos ]
+		cfgList: [ cos ],
+		repo: "BennettChina/coser-image"
 	};
 }
