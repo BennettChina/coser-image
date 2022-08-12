@@ -6,6 +6,9 @@ import { dbKeyCos, dbKeyRef, getCoserImage, newSomePost } from "#coser-image/ach
 import { secondToString } from "#coser-image/util/time";
 import { segment } from "oicq";
 import { getTimeOut } from "#coser-image/util/RedisUtils";
+import { getTargetInfo, sendMsg } from "#setu-plugin/util/utils";
+import { config } from "#coser-image/init";
+import { wait } from "#coser-image/util/utils";
 
 /**
 Author: Ethereal
@@ -13,23 +16,23 @@ CreateTime: 2022/6/28
  */
 
 
-export async function main( { sendMessage, messageData, redis }: InputParameter ) {
-	const content = messageData.raw_message;
+export async function main( i: InputParameter ) {
+	const content = i.messageData.raw_message;
 	
 	if ( content === "ani" ) {
 		//获取一张动漫图片
-		await getAniImage( sendMessage );
+		await getAniImage( i.sendMessage );
 		return;
 	} else if ( content === "more" ) {
-		await getCosMore( sendMessage );
+		await getCosMore( i.sendMessage );
 		return;
 	}
-	await getMysImage( sendMessage );
+	await getMysImage( i );
 	return;
 }
 
-async function getMysImage( sendMessage: Msg.SendFunc ) {
-	if ( await bot.redis.getListLength( dbKeyCos ) < 60 ) {
+async function getMysImage( { sendMessage, messageData, client, redis, logger, config: botConfig }: InputParameter ) {
+	if ( await redis.getListLength( dbKeyCos ) < 60 ) {
 		await sendMessage( "初始化数据，请耐心等待一分钟..." );
 	}
 	const cosImage = await getCoserImage();
@@ -37,7 +40,12 @@ async function getMysImage( sendMessage: Msg.SendFunc ) {
 	const content = `作  者: ${ cosImage.author }\nMUID: ${ cosImage.uid }\n图片来源米游社~`;
 	const img = segment.image( cosImage.images[random], true, 10000 );
 	const msg = content + "\n" + segment.toCqcode( img );
-	await sendMessage( msg );
+	const message_id = await sendMsg( getTargetInfo( messageData ), msg, client, botConfig.atUser );
+	if ( message_id && config.recallTime > 0 ) {
+		logger.info( `消息: ${ message_id } 将在${ config.recallTime }秒后撤回.` );
+		await wait( config.recallTime * 1000 );
+		await client.deleteMsg( message_id );
+	}
 }
 
 async function getCosMore( sendMessage: Msg.SendFunc ) {

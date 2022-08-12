@@ -59,11 +59,22 @@ git pull
 权限: 用户 (User)
 ```
 
+## 插件配置
+
+```yaml
+# <recallTime>秒后消息撤回
+recallTime: 0
+```
+
 ## 展示
 
 ![coser](http://cdn.ethreal.cn/img/1656477361198-1656477362.png)
 
 ![more coser](http://cdn.ethreal.cn/img/1656477386091-1656477387.png)
+
+## 更新日志
+
+- 2022/08/12 增加消息延迟撤回配置， `recallTime` 祥见配置。
 
 # 其他
 

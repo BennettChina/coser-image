@@ -5,6 +5,11 @@ CreateTime: 2022/6/28
 
 import { PluginSetting } from "@modules/plugin";
 import { OrderConfig } from "@modules/command";
+import FileManagement from "@modules/file";
+import CoserImageConfig from "#coser-image/module/CoserImageConfig";
+import { BOT } from "@modules/bot";
+
+export let config: CoserImageConfig;
 
 const cos: OrderConfig = {
 	type: "order",
@@ -19,8 +24,39 @@ const cos: OrderConfig = {
 		"ani 返回一张动漫图片\n"
 }
 
+function loadConfig( file: FileManagement ): CoserImageConfig {
+	const initCfg = CoserImageConfig.init;
+	const fileName: string = "coser-image";
+	
+	const path: string = file.getFilePath( `${ fileName }.yml` );
+	const isExist: boolean = file.isExist( path );
+	if ( !isExist ) {
+		file.createYAML( fileName, initCfg );
+		return new CoserImageConfig( initCfg );
+	}
+	
+	const config: any = file.loadYAML( fileName );
+	const keysNum = o => Object.keys( o ).length;
+	
+	/* 检查 defaultConfig 是否更新 */
+	if ( keysNum( config ) !== keysNum( initCfg ) ) {
+		const c: any = {};
+		const keys: string[] = Object.keys( initCfg );
+		for ( let k of keys ) {
+			c[k] = config[k] ? config[k] : initCfg[k];
+		}
+		file.writeYAML( fileName, c );
+		return new CoserImageConfig( c );
+	}
+	return new CoserImageConfig( config );
+}
+
 // 不可 default 导出，函数名固定
-export async function init(): Promise<PluginSetting> {
+export async function init( bot: BOT ): Promise<PluginSetting> {
+	/* 加载 coser-image.yml 配置 */
+	config = loadConfig( bot.file );
+	bot.refresh.registerRefreshableFile( "coser-image", config );
+	
 	return {
 		pluginName: "coser-image",
 		cfgList: [ cos ],
