@@ -59,6 +59,7 @@ export async function init( bot: BOT ): Promise<PluginSetting> {
 	
 	return {
 		pluginName: "coser-image",
+		aliases: config.aliases,
 		cfgList: [ cos ],
 		repo: "BennettChina/coser-image"
 	};

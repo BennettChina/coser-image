@@ -64,6 +64,9 @@ git pull
 ```yaml
 # <recallTime>秒后消息撤回
 recallTime: 0
+aliases:
+    - coser
+    - cos图
 ```
 
 ## 展示
@@ -74,6 +77,7 @@ recallTime: 0
 
 ## 更新日志
 
+- 2022/10/07 支持插件的别名更新
 - 2022/08/12 增加消息延迟撤回配置， `recallTime` 祥见配置。
 
 # 其他
