@@ -6,9 +6,8 @@ import { dbKeyCos, dbKeyRef, getCoserImage, newSomePost } from "#coser-image/ach
 import { secondToString } from "#coser-image/util/time";
 import { segment } from "oicq";
 import { getTimeOut } from "#coser-image/util/RedisUtils";
-import { getTargetInfo, sendMsg } from "#setu-plugin/util/utils";
 import { config } from "#coser-image/init";
-import { wait } from "#coser-image/util/utils";
+import { getTargetInfo, sendMsg, wait } from "#coser-image/util/utils";
 
 /**
 Author: Ethereal
