@@ -37,7 +37,7 @@ async function getMysImage( { sendMessage, messageData, client, redis, logger, c
 	const cosImage = await getCoserImage();
 	const random = Math.ceil( Math.random() * cosImage.images.length - 1 );
 	const content = `作  者: ${ cosImage.author }\nMUID: ${ cosImage.uid }\n图片来源米游社~`;
-	const img = segment.image( cosImage.images[random], true, 10000 );
+	const img = segment.image( cosImage.images[random], true, 60 );
 	const msg = content + "\n" + segment.toCqcode( img );
 	const message_id = await sendMsg( getTargetInfo( messageData ), msg, client, botConfig.atUser );
 	if ( message_id && config.recallTime > 0 ) {
@@ -81,7 +81,7 @@ async function getCosMore( sendMessage: Msg.SendFunc ) {
 }
 
 async function getAniImage( sendMessage: Msg.SendFunc ) {
-	const img = segment.image( await getAnimation(), true, 10000 );
+	const img = segment.image( await getAnimation(), true, 60 );
 	const msg = segment.toCqcode( img );
 	await sendMessage( msg );
 }
