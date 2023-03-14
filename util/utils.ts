@@ -1,40 +1,4 @@
-import * as sdk from "oicq";
-import { MessageElem } from "oicq";
 import { isGroupMessage, Message, MessageType } from "@modules/message";
-
-function checkIterator( obj: MessageElem | Iterable<MessageElem | string> ): obj is Iterable<MessageElem | string> {
-	return typeof obj[Symbol.iterator] === "function";
-}
-
-export async function sendMsg( targetInfo: TargetInfo, content: sdk.Sendable, client: sdk.Client, atUser?: boolean ): Promise<string> {
-	if ( targetInfo.type === MessageType.Private ) {
-		const ret = await client.sendPrivateMsg( targetInfo.targetId, content );
-		if ( ret.retcode === 0 ) {
-			return ret.data.message_id;
-		}
-		return "";
-	}
-	
-	const at = sdk.segment.at( targetInfo.user_id )
-	const space = sdk.segment.text( " " );
-	if ( atUser ) {
-		if ( typeof content === "string" ) {
-			const split = content.length < 60 ? " " : "\n";
-			content = sdk.cqcode.at( targetInfo.user_id ) + split + content;
-		} else if ( checkIterator( content ) ) {
-			// @ts-ignore
-			content = [ at, space, ...content ];
-		} else {
-			const data = ( "data" in content && content.data ) ? Object.values( content.data ) : []
-			content = [ at, space, sdk.segment[content.type]( ...data ) ];
-		}
-	}
-	const ret = await client.sendGroupMsg( targetInfo.targetId, content );
-	if ( ret.retcode === 0 ) {
-		return ret.data.message_id;
-	}
-	return ""
-}
 
 /**
  * await实现线程暂定的功能，等同于 sleep
@@ -62,13 +26,13 @@ export const getTargetInfo: ( messageData: Message ) => TargetInfo = ( messageDa
 	if ( isGroupMessage( messageData ) ) {
 		return {
 			targetId: messageData.group_id,
-			user_id: messageData.user_id,
+			user_id: messageData.sender.user_id,
 			type: MessageType.Group
 		};
 	} else {
 		return {
-			targetId: messageData.user_id,
-			user_id: messageData.user_id,
+			targetId: messageData.from_id,
+			user_id: messageData.from_id,
 			type: MessageType.Private
 		};
 	}
