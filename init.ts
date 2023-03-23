@@ -64,7 +64,7 @@ export async function init( bot: BOT ): Promise<PluginSetting> {
 		repo: {
 			owner: "BennettChina",
 			repoName: "coser-image",
-			ref: "icqq"
+			ref: "master"
 		}
 	};
 }
