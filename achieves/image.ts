@@ -1,13 +1,13 @@
-import bot from "ROOT";
 import { InputParameter } from "@modules/command";
 import { CosPost, getAnimation } from "#coser-image/util/api";
 import * as Msg from "@modules/message";
-import { dbKeyCos, dbKeyRef, getCoserImage, newSomePost } from "#coser-image/achieves/data";
-import { secondToString } from "#coser-image/util/time";
-import { ImageElem, segment } from "icqq";
+import { isPrivateMessage } from "@modules/message";
+import { dbKeyRef, getCoserImage, getStaticMessage, newSomePost } from "#coser-image/achieves/data";
+import { Forwardable, ImageElem, segment, Sendable } from "icqq";
 import { getTimeOut } from "#coser-image/util/RedisUtils";
 import { config } from "#coser-image/init";
 import { wait } from "#coser-image/util/utils";
+import { getRealName, NameResult } from "#genshin/utils/name";
 
 /**
 Author: Ethereal
@@ -30,15 +30,51 @@ export async function main( i: InputParameter ) {
 	return;
 }
 
-async function getMysImage( { sendMessage, client, redis, logger }: InputParameter ) {
-	if ( await redis.getListLength( dbKeyCos ) < 60 ) {
-		await sendMessage( "初始化数据，请耐心等待一分钟..." );
+async function getMysImage( { sendMessage, client, logger, messageData }: InputParameter ) {
+	let topic = messageData.raw_message || "";
+	if ( topic ) {
+		const result: NameResult = getRealName( topic );
+		if ( !result.definite ) {
+			const message: string = result.info.length === 0
+				? ""
+				: `是否要找：${ [ "", ...<string[]>result.info ].join( "\n  - " ) }\n返回结果可能不符合你的需求，可以指定更准确的角色名。`;
+			if ( message ) {
+				await sendMessage( message );
+			}
+		} else {
+			topic = <string>result.info;
+		}
 	}
-	const cosImage: CosPost = await getCoserImage();
-	const random: number = Math.ceil( Math.random() * cosImage.images.length - 1 );
-	const content: string = `作  者: ${ cosImage.author }\nMUID: ${ cosImage.uid }\n图片来源米游社~\n`;
-	const img: ImageElem = segment.image( cosImage.images[random], true, 10000 );
-	const { message_id } = await sendMessage( [ content, img ] );
+	const cosImage: CosPost | undefined = await getCoserImage( topic );
+	if ( !cosImage ) {
+		await sendMessage( `未获取到你指定角色【${ topic }】的Cos图，或可尝试更准确的角色名。` );
+		return;
+	}
+	const text: string = `~图片来源米游社~\n作  者: ${ cosImage.author }\nMUID: ${ cosImage.uid }\n标题: ${ cosImage.subject }\n帖子ID: ${ cosImage.post_id }`;
+	let content: Sendable;
+	if ( cosImage.images.length < 2 ) {
+		const img: ImageElem = segment.image( cosImage.images[0], true, 60 );
+		content = [ text, "\n", img ];
+	} else {
+		const forwardMsg: Forwardable[] = cosImage.images.map( url => {
+			const img: ImageElem = segment.image( url, true, 60 );
+			const node: Forwardable = {
+				user_id: client.uin,
+				message: img,
+				nickname: client.nickname,
+				time: Date.now()
+			}
+			return node;
+		} )
+		forwardMsg.unshift( {
+			user_id: client.uin,
+			nickname: client.nickname,
+			time: Date.now(),
+			message: text
+		} );
+		content = await client.makeForwardMsg( forwardMsg, isPrivateMessage( messageData ) );
+	}
+	const { message_id } = await sendMessage( content );
 	if ( message_id && config.recallTime > 0 ) {
 		logger.info( `消息: ${ message_id } 将在${ config.recallTime }秒后撤回.` );
 		await wait( config.recallTime * 1000 );
@@ -59,21 +95,7 @@ async function getCosMore( sendMessage: Msg.SendFunc ) {
 		return;
 	} else {
 		//统计数据
-		let curImageNum: number = 0, totalImageNum: number = 0;
-		result.forEach( post => {
-			curImageNum += post.images.length;
-		} );
-		const cosString: string[] = await bot.redis.getList( dbKeyCos );
-		const ttl: number = await getTimeOut( dbKeyCos );
-		cosString.forEach( value => {
-			const post: CosPost = JSON.parse( value );
-			totalImageNum += post.images.length;
-		} )
-		const message = `本次共获取Cos相关帖子数量：${ result.length }\n` +
-			`本次获取符合要求的图片数量：${ curImageNum }\n\n` +
-			`缓存中总共存在Cos帖子数量：${ cosString.length }\n` +
-			`缓存中总符合要求的图片数量：${ totalImageNum }\n\n` +
-			`距下次重置时间：${ secondToString( ttl ) }`;
+		const message: string = await getStaticMessage( result );
 		await sendMessage( message );
 		return;
 	}

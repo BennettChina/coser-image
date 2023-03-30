@@ -8,20 +8,22 @@ import { OrderConfig } from "@modules/command";
 import FileManagement from "@modules/file";
 import CoserImageConfig from "#coser-image/module/CoserImageConfig";
 import { BOT } from "@modules/bot";
+import { ScheduleService } from "#coser-image/module/ScheduleService";
 
 export let config: CoserImageConfig;
 
 const cos: OrderConfig = {
 	type: "order",
 	cmdKey: "extr-wave-coser-image",
-	desc: [ "获取一张coser图", "(ani | more)" ],
+	desc: [ "获取一张coser图", "(ani | more | 角色名)" ],
 	headers: [ "cos" ],
-	regexps: [ "(more|ani)?" ],
+	regexps: [ ".*" ],
 	main: "achieves/image",
 	detail: "获取一张Cos图片，参数：\n" +
 		"无参数 获取米游社Cos图片\n" +
 		"more 获取更多米游社Cos图片缓存" +
-		"ani 返回一张动漫图片\n"
+		"ani 返回一张动漫图片\n" +
+		"角色名 获取指定角色的米游社Cos图片"
 }
 
 function loadConfig( file: FileManagement ): CoserImageConfig {
@@ -56,6 +58,7 @@ export async function init( bot: BOT ): Promise<PluginSetting> {
 	/* 加载 coser-image.yml 配置 */
 	config = loadConfig( bot.file );
 	bot.refresh.registerRefreshableFile( "coser-image", config );
+	bot.refresh.registerRefreshableFunc( new ScheduleService() );
 	
 	return {
 		pluginName: "coser-image",

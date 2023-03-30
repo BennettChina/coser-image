@@ -39,7 +39,10 @@ export enum Forum {
 export interface CosPost {
 	author: string,
 	uid: string,
-	images: string[]
+	images: string[],
+	topic: string;
+	post_id: string;
+	subject: string;
 }
 
 export async function getPostImage( type: Forum, last_id: number = 0 ): Promise<any> {
