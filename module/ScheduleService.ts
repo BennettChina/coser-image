@@ -2,7 +2,7 @@ import { cancelJob, scheduleJob } from "node-schedule";
 import { randomInt } from "#genshin/utils/random";
 import { wait } from "#coser-image/util/utils";
 import { CosPost } from "#coser-image/util/api";
-import { getStaticMessage, newSomePost } from "#coser-image/achieves/data";
+import { ErrorMsg, getStaticMessage, newSomePost } from "#coser-image/achieves/data";
 import { config } from "#coser-image/init";
 import { RefreshCatch } from "@modules/management/refresh";
 import bot from "ROOT";
@@ -36,12 +36,14 @@ export class ScheduleService {
 				const sec: number = randomInt( 0, 180 );
 				await wait( sec * 1000 );
 				const stat: CosPost[] = [];
+				let page: number = 1;
 				while ( true ) {
-					const result: string | CosPost[] = await newSomePost();
-					if ( typeof result === 'string' ) {
+					const result: ErrorMsg | CosPost[] = await newSomePost( page );
+					if ( result === ErrorMsg.over || result === ErrorMsg.fail ) {
 						break;
 					}
 					stat.push( ...result );
+					page++;
 				}
 				//统计数据
 				const message: string = await getStaticMessage( stat );

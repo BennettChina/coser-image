@@ -2,7 +2,7 @@ import { InputParameter } from "@modules/command";
 import { CosPost, getAnimation } from "#coser-image/util/api";
 import * as Msg from "@modules/message";
 import { isPrivateMessage } from "@modules/message";
-import { dbKeyRef, getCoserImage, getStaticMessage, newSomePost } from "#coser-image/achieves/data";
+import { dbKeyRef, ErrorMsg, getCoserImage, getStaticMessage, newSomePost } from "#coser-image/achieves/data";
 import { Forwardable, ImageElem, segment, Sendable } from "icqq";
 import { getTimeOut } from "#coser-image/util/RedisUtils";
 import { config } from "#coser-image/init";
@@ -89,16 +89,24 @@ async function getCosMore( sendMessage: Msg.SendFunc ) {
 		return;
 	}
 	await sendMessage( "正在获取数据，稍微慢那么一丢丢~" );
-	const result: string | CosPost[] = await newSomePost();
-	if ( typeof result === "string" ) {
-		await sendMessage( result );
-		return;
-	} else {
-		//统计数据
-		const message: string = await getStaticMessage( result );
-		await sendMessage( message );
-		return;
+	const stat: CosPost[] = [];
+	let page: number = 1;
+	while ( true ) {
+		const result: ErrorMsg | CosPost[] = await newSomePost( page );
+		if ( result === ErrorMsg.fail ) {
+			await sendMessage( result );
+			break;
+		} else if ( result === ErrorMsg.over ) {
+			break;
+		} else {
+			stat.push( ...result );
+			page++;
+		}
 	}
+	
+	//统计数据
+	const message: string = await getStaticMessage( stat );
+	await sendMessage( message );
 }
 
 async function getAniImage( sendMessage: Msg.SendFunc ) {

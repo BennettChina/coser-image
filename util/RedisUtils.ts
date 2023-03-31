@@ -31,3 +31,15 @@ export async function getListByIndex( key: string, index: number ): Promise<stri
 		} );
 	} );
 }
+
+export async function getSetElementRandom( key: string ): Promise<string> {
+	return new Promise( ( resolve, reject ) => {
+		bot.redis.client.srandmember( key, ( error: Error | null, data: string ) => {
+			if ( error !== null ) {
+				reject( error );
+			} else {
+				resolve( data || "" );
+			}
+		} );
+	} );
+}
