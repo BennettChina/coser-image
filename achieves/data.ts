@@ -116,9 +116,9 @@ export async function getStaticMessage( result: CosPost[] ): Promise<string> {
 		const post: CosPost = JSON.parse( value );
 		totalImageNum += post.images.length;
 	} );
-	return `本次共获取Cos相关帖子数量：${ result.length }\n` +
-		`本次获取符合要求的图片数量：${ curImageNum }\n\n` +
-		`缓存中总共存在Cos帖子数量(已去重)：${ cosString.length }\n` +
-		`缓存中总符合要求的图片数量(已去重)：${ totalImageNum }\n\n` +
+	return `本次共获取Cos相关帖子数量：${ cosString.length - result.length }\n` +
+		`本次获取符合要求的图片数量：${ totalImageNum - curImageNum }\n\n` +
+		`缓存中总共存在Cos帖子数量：${ cosString.length }\n` +
+		`缓存中总符合要求的图片数量：${ totalImageNum }\n\n` +
 		`距下次重置时间：${ secondToString( ttl ) }`;
 }
