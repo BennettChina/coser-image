@@ -6,6 +6,7 @@ import { getSetElementRandom, getTimeOut } from "#coser-image/util/RedisUtils";
 import { CosPost, Forum, getPostImage } from "#coser-image/util/api";
 import bot from "ROOT";
 import { secondToString } from "#coser-image/util/time";
+import { wait } from "#coser-image/util/utils";
 
 export const dbKeyCos = `adachi-plugins.cos.our-wives.`; //米游社Cos图片缓存
 export const dbKeyRef = `adachi-plugins.cos.our-refresh`; //米游社刷新计时key
@@ -41,6 +42,7 @@ export async function getCoserImage( topic: string ): Promise<CosPost | undefine
 		}
 		num = await getLength( topic );
 		page++;
+		await wait( 1000 );
 	}
 	if ( topic ) {
 		if ( num > 0 ) {
@@ -93,7 +95,8 @@ async function convertData( posts: any[] ): Promise<CosPost[]> {
 			images: postImages,
 			topic,
 			post_id: post.post_id,
-			subject: post.subject
+			subject: post.subject,
+			created_at: post.created_at
 		};
 		cosPosts.push( temp );
 	}

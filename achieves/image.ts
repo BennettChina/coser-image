@@ -101,6 +101,7 @@ async function getCosMore( sendMessage: Msg.SendFunc ) {
 		} else {
 			stat.push( ...result );
 			page++;
+			await wait( 1000 );
 		}
 	}
 	

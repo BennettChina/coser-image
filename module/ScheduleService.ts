@@ -44,6 +44,7 @@ export class ScheduleService {
 					}
 					stat.push( ...result );
 					page++;
+					await wait( 1000 );
 				}
 				//统计数据
 				const message: string = await getStaticMessage( stat );

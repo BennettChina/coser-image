@@ -43,6 +43,7 @@ export interface CosPost {
 	topic: string;
 	post_id: string;
 	subject: string;
+	created_at: number;
 }
 
 export async function getPostImage( type: Forum, last_id: number = 0 ): Promise<any> {
