@@ -105,9 +105,6 @@ async function convertData( posts: any[] ): Promise<CosPost[]> {
 
 export async function getStaticMessage( result: CosPost[] ): Promise<string> {
 	let curImageNum: number = 0, totalImageNum: number = 0;
-	result.forEach( post => {
-		curImageNum += post.images.length;
-	} );
 	const keys: string[] = await bot.redis.getKeysByPrefix( dbKeyCos );
 	const cosString: string[] = [];
 	for ( const key of keys ) {
@@ -118,9 +115,14 @@ export async function getStaticMessage( result: CosPost[] ): Promise<string> {
 	cosString.forEach( value => {
 		const post: CosPost = JSON.parse( value );
 		totalImageNum += post.images.length;
+		result = result.filter( _post => _post.post_id !== post.post_id );
 	} );
-	return `本次共获取Cos相关帖子数量：${ cosString.length - result.length }\n` +
-		`本次获取符合要求的图片数量：${ totalImageNum - curImageNum }\n\n` +
+	
+	result.forEach( _post => {
+		curImageNum += _post.images.length;
+	} );
+	return `本次共获取Cos相关帖子数量：${ result.length }\n` +
+		`本次获取符合要求的图片数量：${ curImageNum }\n\n` +
 		`缓存中总共存在Cos帖子数量：${ cosString.length }\n` +
 		`缓存中总符合要求的图片数量：${ totalImageNum }\n\n` +
 		`距下次重置时间：${ secondToString( ttl ) }`;
