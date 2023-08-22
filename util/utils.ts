@@ -1,4 +1,4 @@
-import { isGroupMessage, Message, MessageType } from "@modules/message";
+import { isGroupMessage, Message, MessageType } from "@/modules/message";
 
 /**
  * await实现线程暂定的功能，等同于 sleep

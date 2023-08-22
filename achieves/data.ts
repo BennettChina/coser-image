@@ -2,11 +2,11 @@
 Author: Ethereal
 CreateTime: 2022/6/29
  */
-import { getSetElementRandom, getTimeOut } from "#coser-image/util/RedisUtils";
-import { CosPost, Forum, getPostImage } from "#coser-image/util/api";
+import { getSetElementRandom, getTimeOut } from "#/coser-image/util/RedisUtils";
+import { CosPost, Forum, getPostImage } from "#/coser-image/util/api";
 import bot from "ROOT";
-import { secondToString } from "#coser-image/util/time";
-import { wait } from "#coser-image/util/utils";
+import { secondToString } from "#/coser-image/util/time";
+import { wait } from "#/coser-image/util/utils";
 
 export const dbKeyCos = `adachi-plugins.cos.our-wives.`; //米游社Cos图片缓存
 export const dbKeyRef = `adachi-plugins.cos.our-refresh`; //米游社刷新计时key
@@ -72,7 +72,7 @@ export async function newSomePost( page: number = 1 ): Promise<ErrorMsg | CosPos
 			bot.redis.addSetMember( dbKeyCos + value.topic, JSON.stringify( value ) );
 			bot.redis.setTimeout( dbKeyCos + value.topic, 3600 * 24 * 30 );
 		} );
-		await bot.redis.setString( dbKeyRef, true, 60 ); //刷新重置冷却时间
+		await bot.redis.setString( dbKeyRef, "true", 60 ); //刷新重置冷却时间
 		return images;
 	}
 	bot.logger.warn( `[coser-image] ${ ErrorMsg.fail }, reason: ${ data.message }` );

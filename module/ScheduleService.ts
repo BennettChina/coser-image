@@ -1,11 +1,11 @@
 import { cancelJob, scheduleJob } from "node-schedule";
-import { randomInt } from "#genshin/utils/random";
-import { wait } from "#coser-image/util/utils";
-import { CosPost } from "#coser-image/util/api";
-import { ErrorMsg, getStaticMessage, newSomePost } from "#coser-image/achieves/data";
-import { config } from "#coser-image/init";
-import { RefreshCatch } from "@modules/management/refresh";
 import bot from "ROOT";
+import { config } from "#/coser-image/init";
+import { RefreshCatch } from "@/modules/management/refresh";
+import { getRandomNumber } from "@/utils/random";
+import { wait } from "#/coser-image/util/utils";
+import { CosPost } from "#/coser-image/util/api";
+import { ErrorMsg, getStaticMessage, newSomePost } from "#/coser-image/achieves/data";
 
 export class ScheduleService {
 	private readonly jobName: string = "coser-get-more";
@@ -33,7 +33,7 @@ export class ScheduleService {
 	public async create(): Promise<void> {
 		if ( config.autoGetMore ) {
 			scheduleJob( this.jobName, config.cronRule, async () => {
-				const sec: number = randomInt( 0, 180 );
+				const sec: number = getRandomNumber( 0, 180 );
 				await wait( sec * 1000 );
 				const stat: CosPost[] = [];
 				let page: number = 1;

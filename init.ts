@@ -3,12 +3,9 @@ Author: Ethereal
 CreateTime: 2022/6/28
  */
 
-import { PluginSetting } from "@modules/plugin";
-import { OrderConfig } from "@modules/command";
-import FileManagement from "@modules/file";
-import CoserImageConfig from "#coser-image/module/CoserImageConfig";
-import { BOT } from "@modules/bot";
-import { ScheduleService } from "#coser-image/module/ScheduleService";
+import { definePlugin } from "@/modules/plugin";
+import { OrderConfig } from "@/modules/command";
+import { ScheduleService } from "#/coser-image/module/ScheduleService";
 
 export let config: CoserImageConfig;
 
@@ -26,48 +23,36 @@ const cos: OrderConfig = {
 		"角色名 获取指定角色的米游社Cos图片"
 }
 
-function loadConfig( file: FileManagement ): CoserImageConfig {
-	const initCfg = CoserImageConfig.init;
-	const fileName: string = "coser-image";
-	
-	const path: string = file.getFilePath( `${ fileName }.yml` );
-	const isExist: boolean = file.isExist( path );
-	if ( !isExist ) {
-		file.createYAML( fileName, initCfg );
-		return new CoserImageConfig( initCfg );
-	}
-	
-	const config: any = file.loadYAML( fileName );
-	const keysNum = o => Object.keys( o ).length;
-	
-	/* 检查 defaultConfig 是否更新 */
-	if ( keysNum( config ) !== keysNum( initCfg ) ) {
-		const c: any = {};
-		const keys: string[] = Object.keys( initCfg );
-		for ( let k of keys ) {
-			c[k] = config[k] ? config[k] : initCfg[k];
-		}
-		file.writeYAML( fileName, c );
-		return new CoserImageConfig( c );
-	}
-	return new CoserImageConfig( config );
+interface CoserImageConfig {
+	/** <recallTime>秒后消息撤回 */
+	recallTime: number;
+	/** 更新使用的别名 */
+	aliases: string[];
+	/** 是否启用定时任务自动获取更多cos图 */
+	autoGetMore: boolean;
+	/** 定时任务的表达式 */
+	cronRule: string;
 }
 
-// 不可 default 导出，函数名固定
-export async function init( bot: BOT ): Promise<PluginSetting> {
-	/* 加载 coser-image.yml 配置 */
-	config = loadConfig( bot.file );
-	bot.refresh.registerRefreshableFile( "coser-image", config );
-	bot.refresh.registerRefreshableFunc( new ScheduleService() );
-	
-	return {
-		pluginName: "coser-image",
-		aliases: config.aliases,
-		cfgList: [ cos ],
-		repo: {
-			owner: "BennettChina",
-			repoName: "coser-image",
-			ref: "master"
-		}
-	};
+const initConfig: CoserImageConfig = {
+	recallTime: 0,
+	aliases: [ "coser", "cos图" ],
+	autoGetMore: false,
+	cronRule: "0 0 * * * *"
 }
+
+export default definePlugin( {
+	name: "COS",
+	cfgList: [ cos ],
+	aliases: initConfig.aliases,
+	repo: {
+		owner: "BennettChina",
+		repoName: "coser-image",
+		ref: "master"
+	},
+	mounted( params ) {
+		config = <CoserImageConfig>params.config.register( "coser-image", initConfig );
+		params.refresh.register( new ScheduleService() );
+		this.aliases = config.aliases;
+	}
+} );

@@ -1,13 +1,13 @@
-import { InputParameter } from "@modules/command";
-import { CosPost, getAnimation } from "#coser-image/util/api";
-import * as Msg from "@modules/message";
-import { isPrivateMessage } from "@modules/message";
-import { dbKeyRef, ErrorMsg, getCoserImage, getStaticMessage, newSomePost } from "#coser-image/achieves/data";
+import { InputParameter } from "@/modules/command";
+import { CosPost, getAnimation } from "#/coser-image/util/api";
+import * as Msg from "@/modules/message";
+import { isPrivateMessage } from "@/modules/message";
+import { dbKeyRef, ErrorMsg, getCoserImage, getStaticMessage, newSomePost } from "#/coser-image/achieves/data";
 import { Forwardable, ImageElem, segment, Sendable } from "icqq";
-import { getTimeOut } from "#coser-image/util/RedisUtils";
-import { config } from "#coser-image/init";
-import { wait } from "#coser-image/util/utils";
-import { getRealName, NameResult } from "#genshin/utils/name";
+import { getTimeOut } from "#/coser-image/util/RedisUtils";
+import { config } from "#/coser-image/init";
+import { wait } from "#/coser-image/util/utils";
+import PluginManager from "@/modules/plugin";
 
 /**
 Author: Ethereal
@@ -32,8 +32,11 @@ export async function main( i: InputParameter ) {
 
 async function getMysImage( { sendMessage, client, logger, messageData }: InputParameter ) {
 	let topic = messageData.raw_message || "";
-	if ( topic ) {
-		const result: NameResult = getRealName( topic );
+	const hasGenshinPlugin: boolean = PluginManager.getInstance().getPluginInfoByAlias( "原神" ).length > 0;
+	if ( topic && hasGenshinPlugin ) {
+		// 有原神插件则用插件的别名去检查，没有就不检查
+		const { getRealName } = await import("#/genshin/utils/name");
+		const result = getRealName( topic );
 		if ( !result.definite ) {
 			const message: string = result.info.length === 0
 				? ""
