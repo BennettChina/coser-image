@@ -1,11 +1,11 @@
 import { cancelJob, scheduleJob } from "node-schedule";
-import bot from "ROOT";
-import { config } from "#/coser-image/init";
-import { RefreshCatch } from "@/modules/management/refresh";
-import { getRandomNumber } from "@/utils/random";
 import { wait } from "#/coser-image/util/utils";
 import { CosPost } from "#/coser-image/util/api";
 import { ErrorMsg, getStaticMessage, newSomePost } from "#/coser-image/achieves/data";
+import { config } from "#/coser-image/init";
+import { RefreshCatch } from "@/modules/management/refresh";
+import bot from "ROOT";
+import { getRandomNumber } from "@/utils/random";
 
 export class ScheduleService {
 	private readonly jobName: string = "coser-get-more";

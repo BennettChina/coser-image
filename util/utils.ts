@@ -31,8 +31,8 @@ export const getTargetInfo: ( messageData: Message ) => TargetInfo = ( messageDa
 		};
 	} else {
 		return {
-			targetId: messageData.from_id,
-			user_id: messageData.from_id,
+			targetId: messageData.user_id,
+			user_id: messageData.user_id,
 			type: MessageType.Private
 		};
 	}

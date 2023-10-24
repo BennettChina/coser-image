@@ -13,11 +13,9 @@ export async function getTimeOut( key: string ): Promise<number> {
 }
 
 export async function getListByIndex( key: string, index: number ): Promise<string> {
-	const data: string | null = await bot.redis.client.lIndex( key, index );
-	return data || "";
+	return await bot.redis.client.lIndex( key, index ) || "";
 }
 
 export async function getSetElementRandom( key: string ): Promise<string> {
-	const data: string | null = await bot.redis.client.sRandMember( key );
-	return data || "";
+	return await bot.redis.client.sRandMember( key ) || "";
 }

@@ -1,0 +1,10 @@
+{
+  "name" : "coser-image",
+  "author" : "Extrwave、Bennett",
+  "private" : true,
+  "license" : "MIT",
+  "version" : "2.0.0",
+  "description" : "此项目为 SilveryStar/Adachi-BOT 衍生插件，用于实现获取米游社Coser图片功能。",
+  "dependencies" : {
+  }
+}

@@ -1,13 +1,12 @@
-import { InputParameter } from "@/modules/command";
+import { defineDirective, InputParameter } from "@/modules/command";
 import { CosPost, getAnimation } from "#/coser-image/util/api";
 import * as Msg from "@/modules/message";
-import { isPrivateMessage } from "@/modules/message";
 import { dbKeyRef, ErrorMsg, getCoserImage, getStaticMessage, newSomePost } from "#/coser-image/achieves/data";
-import { Forwardable, ImageElem, segment, Sendable } from "icqq";
+import { ForwardElem, ImageElem, segment, Sendable } from "@/modules/lib";
 import { getTimeOut } from "#/coser-image/util/RedisUtils";
 import { config } from "#/coser-image/init";
 import { wait } from "#/coser-image/util/utils";
-import PluginManager from "@/modules/plugin";
+import { getRealName, NameResult } from "#/genshin/utils/name";
 
 /**
 Author: Ethereal
@@ -15,7 +14,7 @@ CreateTime: 2022/6/28
  */
 
 
-export async function main( i: InputParameter ) {
+export default defineDirective( "order", async ( i: InputParameter ) => {
 	const content = i.messageData.raw_message;
 	
 	if ( content === "ani" ) {
@@ -28,15 +27,12 @@ export async function main( i: InputParameter ) {
 	}
 	await getMysImage( i );
 	return;
-}
+} );
 
 async function getMysImage( { sendMessage, client, logger, messageData }: InputParameter ) {
 	let topic = messageData.raw_message || "";
-	const hasGenshinPlugin: boolean = PluginManager.getInstance().getPluginInfoByAlias( "原神" ).length > 0;
-	if ( topic && hasGenshinPlugin ) {
-		// 有原神插件则用插件的别名去检查，没有就不检查
-		const { getRealName } = await import("#/genshin/utils/name");
-		const result = getRealName( topic );
+	if ( topic ) {
+		const result: NameResult = getRealName( topic );
 		if ( !result.definite ) {
 			const message: string = result.info.length === 0
 				? ""
@@ -54,34 +50,37 @@ async function getMysImage( { sendMessage, client, logger, messageData }: InputP
 		return;
 	}
 	const text: string = `~图片来源米游社~\n作  者: ${ cosImage.author }\nMUID: ${ cosImage.uid }\n标题: ${ cosImage.subject }\n帖子ID: ${ cosImage.post_id }`;
-	let content: Sendable;
+	let content: Sendable | ForwardElem;
 	if ( cosImage.images.length < 2 ) {
-		const img: ImageElem = segment.image( cosImage.images[0], true, 60 );
+		const img: ImageElem = segment.image( cosImage.images[0] );
 		content = [ text, "\n", img ];
 	} else {
-		const forwardMsg: Forwardable[] = cosImage.images.map( url => {
-			const img: ImageElem = segment.image( url, true, 60 );
-			const node: Forwardable = {
-				user_id: client.uin,
-				message: img,
-				nickname: client.nickname,
-				time: Date.now()
-			}
-			return node;
+		const info = await client.getLoginInfo();
+		const nodes = cosImage.images.map( url => {
+			const img: ImageElem = segment.image( url );
+			return {
+				uin: client.uin,
+				content: img,
+				name: info.data.nickname
+			};
 		} )
-		forwardMsg.unshift( {
-			user_id: client.uin,
-			nickname: client.nickname,
-			time: Date.now(),
-			message: text
+		
+		nodes.unshift( {
+			uin: client.uin,
+			// @ts-ignore
+			content: text,
+			name: info.data.nickname
 		} );
-		content = await client.makeForwardMsg( forwardMsg, isPrivateMessage( messageData ) );
+		content = {
+			type: "forward",
+			messages: nodes
+		};
 	}
-	const { message_id } = await sendMessage( content );
+	const message_id = await sendMessage( content );
 	if ( message_id && config.recallTime > 0 ) {
 		logger.info( `消息: ${ message_id } 将在${ config.recallTime }秒后撤回.` );
 		await wait( config.recallTime * 1000 );
-		await client.deleteMsg( message_id );
+		await client.recallMessage( message_id );
 	}
 }
 
@@ -114,7 +113,7 @@ async function getCosMore( sendMessage: Msg.SendFunc ) {
 }
 
 async function getAniImage( sendMessage: Msg.SendFunc ) {
-	const img: ImageElem = segment.image( await getAnimation(), true, 10000 );
+	const img: ImageElem = segment.image( await getAnimation() );
 	await sendMessage( img );
 }
 
